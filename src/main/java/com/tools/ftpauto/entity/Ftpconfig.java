@@ -9,12 +9,22 @@ package com.tools.ftpauto.entity;
  */
 public class Ftpconfig {
 
+    private String host;
     private String account;
     private String password;
     private String ftpapkbasepath;
     private String test;
     private String pre;
     private String pro;
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
     public void setAccount(String account) {
         this.account = account;
     }

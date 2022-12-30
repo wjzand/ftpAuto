@@ -11,20 +11,14 @@ public class FileUtils {
         System.out.println("readFile:" + strpath);
         String res = null;
         StringBuilder sb = new StringBuilder();
-        int n = 0;
         try {
             File file = new File(strpath);
             InputStreamReader br = new InputStreamReader(new FileInputStream(file), "UTF-8");
             BufferedReader reader = new BufferedReader(br);
             String str;
             while ((str = reader.readLine()) != null) {
-                System.out.println("readFiledddd:" + strpath);
+                System.out.println("readFiledddd:" + str);
                 sb.append(str + "\n");
-                System.out.println("55:" + str);
-                n += 1;
-                System.out.println("44:" + n);
-
-
             }
             res = sb.toString();
         } catch (UnsupportedEncodingException e) {

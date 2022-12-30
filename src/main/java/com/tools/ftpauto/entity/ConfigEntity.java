@@ -10,9 +10,9 @@ import java.util.List;
 public class ConfigEntity {
 
     private List<Client> client;
-    private List<Dduser> dduser;
-    private Ftpconfig ftpconfig;
-    private Ddconfig ddconfig;
+    private List<Dduser> ddUser;
+    private Ftpconfig ftpConfig;
+    private Ddconfig ddConfig;
 
     public List<Client> getClient() {
         return client;
@@ -22,26 +22,28 @@ public class ConfigEntity {
         this.client = client;
     }
 
-    public List<Dduser> getDduser() {
-        return dduser;
+
+    public List<Dduser> getDdUser() {
+        return ddUser;
     }
 
-    public void setDduser(List<Dduser> dduser) {
-        this.dduser = dduser;
+    public void setDdUser(List<Dduser> ddUser) {
+        this.ddUser = ddUser;
     }
 
-    public void setFtpconfig(Ftpconfig ftpconfig) {
-        this.ftpconfig = ftpconfig;
-    }
-    public Ftpconfig getFtpconfig() {
-        return ftpconfig;
+    public Ftpconfig getFtpConfig() {
+        return ftpConfig;
     }
 
-    public void setDdconfig(Ddconfig ddconfig) {
-        this.ddconfig = ddconfig;
-    }
-    public Ddconfig getDdconfig() {
-        return ddconfig;
+    public void setFtpConfig(Ftpconfig ftpConfig) {
+        this.ftpConfig = ftpConfig;
     }
 
+    public Ddconfig getDdConfig() {
+        return ddConfig;
+    }
+
+    public void setDdConfig(Ddconfig ddConfig) {
+        this.ddConfig = ddConfig;
+    }
 }

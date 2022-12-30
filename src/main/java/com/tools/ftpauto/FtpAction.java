@@ -7,6 +7,8 @@ import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.openapi.ui.messages.MessageDialog;
 import com.tools.ftpauto.entity.*;
 import com.tools.ftpauto.utils.FileUtils;
+import com.tools.ftpauto.utils.HttpUtils;
+import com.tools.ftpauto.utils.SftpUtils;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -18,14 +20,15 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 import java.util.HashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class FtpAction extends AnAction {
 
     private String[] listData = new String[]{"司机端", "货主端", "商户端", "运营端"};
-    private String[] ddUsers = new String[]{"刘峰杰1", "刘峰杰2", "刘峰杰3", "刘峰杰4"};
 
     private HashMap<String,String> ddUsersMap = new HashMap<>();
+    private HashMap<String,String> ddUsersSelectMap = new HashMap<>();
 
     private Ftpconfig ftpconfig;
 
@@ -34,16 +37,12 @@ public class FtpAction extends AnAction {
     //当前选中的客户端
     private int currentSelectClientIndex = 0;
 
-    //当前选中的钉钉@端
-    private int currentSelectDdUser = 0;
-
     private Gson gson = new Gson();
 
     @Override
     public void actionPerformed(AnActionEvent e) {
         String projectPath = e.getProject().getBasePath();
         getLocalConfig(e,projectPath);
-        initUi(e);
     }
 
     /**
@@ -57,8 +56,8 @@ public class FtpAction extends AnAction {
         }
         ConfigEntity configEntity = gson.fromJson(localConfig, ConfigEntity.class);
         if(configEntity != null){
-            ftpconfig = configEntity.getFtpconfig();
-            ddconfig = configEntity.getDdconfig();
+            ftpconfig = configEntity.getFtpConfig();
+            ddconfig = configEntity.getDdConfig();
             if(configEntity.getClient() != null && !configEntity.getClient().isEmpty()){
                 listData = new String[configEntity.getClient().size()];
                 for(int i = 0; i < configEntity.getClient().size();i++){
@@ -69,23 +68,27 @@ public class FtpAction extends AnAction {
                     listData[i] = configEntity.getClient().get(i).getName();
                 }
             }
-            if(configEntity.getDduser() != null && !configEntity.getDduser().isEmpty()){
-                ddUsers = new String[configEntity.getDduser().size()];
+            if(configEntity.getDdUser() != null && !configEntity.getDdUser().isEmpty()){
                 ddUsersMap.clear();
-                for(int i = 0; i < configEntity.getDduser().size();i++){
-                    String name = configEntity.getDduser().get(i).getName();
-                    String phone = configEntity.getDduser().get(i).getPhone();
-                    ddUsers[i] = name;
+                for(int i = 0; i < configEntity.getDdUser().size();i++){
+                    String name = configEntity.getDdUser().get(i).getName();
+                    String phone = configEntity.getDdUser().get(i).getPhone();
                     ddUsersMap.put(name,phone);
                 }
             }
         }
+        initUi(e,configEntity);
     }
+
+
+    boolean isUpload = false;
 
     /**
      * ui
      */
-    private void initUi(AnActionEvent e){
+    private void initUi(AnActionEvent e,ConfigEntity configEntity){
+        SftpUtils.getInstance().connect();
+
         JFrame parent = new JFrame("ftp自动上传配置");
         parent.setSize(300,200);
         parent.setLocationRelativeTo(null);
@@ -117,6 +120,7 @@ public class FtpAction extends AnAction {
         ButtonGroup buttonGroup = new ButtonGroup();
         JRadioButton test = new JRadioButton("测试");
         buttonGroup.add(test);
+        test.setSelected(true);
         JRadioButton pre = new JRadioButton("预生产");
         buttonGroup.add(pre);
         JRadioButton pro = new JRadioButton("正式");
@@ -133,17 +137,19 @@ public class FtpAction extends AnAction {
         DDJPanel.setLayout(new VerticalFlowLayout());
         JRadioButton ddRadio = new JRadioButton("上传完毕后是否需要通知到钉钉群");
         DDJPanel.add(ddRadio);
+        JPanel DDUserJPanel = new JPanel();
         JLabel ddUserTip = new JLabel("请选择需要@的钉钉人员");
-        JComboBox<String> userBox = new JComboBox<String>(ddUsers);
-        userBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    currentSelectDdUser = userBox.getSelectedIndex();
+        ddUsersMap.forEach((s, s2) -> {
+            JRadioButton ddRadio1 = new JRadioButton(s);
+            DDUserJPanel.add(ddRadio1);
+            ddRadio1.addItemListener(e1 -> {
+                if(e1.getStateChange() == ItemEvent.SELECTED){
+                    ddUsersSelectMap.put(ddRadio1.getText(),ddUsersMap.get(ddRadio1.getText()));
+                }else {
+                    ddUsersSelectMap.remove(ddRadio1.getText());
                 }
-            }
+            });
         });
-        userBox.setSelectedIndex(currentSelectDdUser);
         JLabel ddTip = new JLabel("请输入钉钉提示的文本,可不填");
         JTextArea ddMsg = new JTextArea();
         ddMsg.setLineWrap(true);
@@ -152,14 +158,14 @@ public class FtpAction extends AnAction {
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     DDJPanel.add(ddUserTip);
-                    DDJPanel.add(userBox);
+                    DDJPanel.add(DDUserJPanel);
                     DDJPanel.add(ddTip);
                     DDJPanel.add(ddMsg);
                     parentJPanel.updateUI();
                     parent.setSize(300,330);
                 }else {
                     DDJPanel.remove(ddUserTip);
-                    DDJPanel.remove(userBox);
+                    DDJPanel.remove(DDUserJPanel);
                     DDJPanel.remove(ddTip);
                     DDJPanel.remove(ddMsg);
                     parentJPanel.updateUI();
@@ -173,13 +179,51 @@ public class FtpAction extends AnAction {
         //level 4
         JPanel completeJPanel = new JPanel();
         JButton completeBt = new JButton("配置完成");
+        JProgressBar jProgressBar = new JProgressBar();
+        jProgressBar.setMinimum(0);
+        jProgressBar.setMaximum(100);
+        jProgressBar.setStringPainted(true);
         completeBt.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(null, "配置完成");
+                if(!isUpload){
+                    isUpload = true;
+                    File file = new File("F:\\project\\operation-android\\app\\build\\outputs\\apk\\debug\\operation_debug_v1.2.6_1222_1756.apk");
+                    if(test.isSelected()){
+
+                    }
+                    if(pre.isSelected()){
+
+                    }
+                    if(pro.isSelected()){
+
+                    }
+                    SftpUtils.getInstance().uploadFile(file, file.getName(), "/home/driver/apk/智运-运营端/开发", new UploadProgress() {
+                        @Override
+                        public void onProgress(String percent) {
+                            jProgressBar.setValue(Integer.valueOf(percent));
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            isUpload = false;
+                            if(ddRadio.isSelected()){
+                                String content = "最新包" + file.getName() + "已上传";
+                                if(!ddMsg.getText().isEmpty()){
+                                    content  = content +  "," + ddMsg.getText();
+                                }
+                                HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
+                            }
+                            JOptionPane.showMessageDialog(null, "上传成功");
+                        }
+                    });
+                }else {
+                    JOptionPane.showMessageDialog(null, "正在上传中");
+                }
             }
         });
         completeJPanel.add(completeBt);
+        completeJPanel.add(jProgressBar);
         parentJPanel.add(completeJPanel);
 
 
