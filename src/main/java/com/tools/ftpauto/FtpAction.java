@@ -269,7 +269,6 @@ public class FtpAction extends AnAction {
 
     /**
      * 找到文件
-     * @param eve
      * @param path 第一个去寻找的地址
      * @param secondPath 第二个去寻找的地址
      * @return
@@ -285,10 +284,12 @@ public class FtpAction extends AnAction {
         }
         if(pfile.exists()){
             File[] p = pfile.listFiles();
-            for(File f:p){
-                if(f.getName().endsWith(".apk")){
-                    file = f;
-                    break;
+            if(p  != null){
+                for(File f:p){
+                    if(f.getName().endsWith(".apk")){
+                        file = f;
+                        break;
+                    }
                 }
             }
         }
