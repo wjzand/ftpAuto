@@ -86,7 +86,7 @@ public class FtpAction extends AnAction {
     /**
      * ui
      */
-    private void initUi(AnActionEvent e,ConfigEntity configEntity){
+    private void initUi(AnActionEvent eve,ConfigEntity configEntity){
         SftpUtils.getInstance().connect();
 
         JFrame parent = new JFrame("ftp自动上传配置");
@@ -116,8 +116,10 @@ public class FtpAction extends AnAction {
 
         //level 2
         JPanel envirmentJPanel = new JPanel();
-        JLabel envirmentTip = new JLabel("请选择环境");
+        JLabel envirmentTip = new JLabel("请选择");
         ButtonGroup buttonGroup = new ButtonGroup();
+        JRadioButton dev = new JRadioButton("开发");
+        buttonGroup.add(dev);
         JRadioButton test = new JRadioButton("测试");
         buttonGroup.add(test);
         test.setSelected(true);
@@ -126,6 +128,7 @@ public class FtpAction extends AnAction {
         JRadioButton pro = new JRadioButton("正式");
         buttonGroup.add(pro);
         envirmentJPanel.add(envirmentTip);
+        envirmentJPanel.add(dev);
         envirmentJPanel.add(test);
         envirmentJPanel.add(pre);
         envirmentJPanel.add(pro);
@@ -137,7 +140,14 @@ public class FtpAction extends AnAction {
         DDJPanel.setLayout(new VerticalFlowLayout());
         JRadioButton ddRadio = new JRadioButton("上传完毕后是否需要通知到钉钉群");
         DDJPanel.add(ddRadio);
-        JPanel DDUserJPanel = new JPanel();
+        int row = 1;
+        int col = 3;
+        //最多2行
+        if(ddUsersMap.size() > 3){
+            row = 2;
+        }
+        GridLayout layout = new GridLayout(row, col);
+        JPanel DDUserJPanel = new JPanel(layout);
         JLabel ddUserTip = new JLabel("请选择需要@的钉钉人员");
         ddUsersMap.forEach((s, s2) -> {
             JRadioButton ddRadio1 = new JRadioButton(s);
@@ -188,27 +198,53 @@ public class FtpAction extends AnAction {
             public void actionPerformed(ActionEvent e) {
                 if(!isUpload){
                     isUpload = true;
-                    File file = new File("F:\\project\\operation-android\\app\\build\\outputs\\apk\\debug\\operation_debug_v1.2.6_1222_1756.apk");
+//                    File file = new File("F:\\project\\operation-android\\app\\build\\outputs\\apk\\debug\\operation_debug_v1.2.6_1222_1756.apk");
+                    File file = null;
+                    String envirment = "开发";
+                    if(dev.isSelected()){
+                        envirment = configEntity.getFtpConfig().getDev();
+                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/debug",
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug","");
+                    }
                     if(test.isSelected()){
-
+                        envirment = configEntity.getFtpConfig().getDev();
+                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/dat",
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/dat",
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug");
                     }
                     if(pre.isSelected()){
-
+                        envirment = configEntity.getFtpConfig().getDev();
+                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/pre",
+                                eve.getProject().getBasePath() + File.separator + "app/release","");
                     }
                     if(pro.isSelected()){
-
+                        envirment = configEntity.getFtpConfig().getDev();
+                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","");
                     }
-                    SftpUtils.getInstance().uploadFile(file, file.getName(), "/home/driver/apk/智运-运营端/开发", new UploadProgress() {
+                    if(file == null){
+                        JOptionPane.showMessageDialog(null, "没有找到apk文件");
+                        isUpload = false;
+                        return;
+                    }
+                    String remotePath = "/home/driver/apk/智运-运营端/开发";
+                    remotePath = configEntity.getFtpConfig().getFtpapkbasepath() + File.separator + listData[currentSelectClientIndex] + File.separator + envirment;
+                    File finalFile = file;
+                    System.out.println("找到文件：" + finalFile.getAbsolutePath());
+                    System.out.println("根据配置需要到ftp的目录是：" + remotePath);
+                    SftpUtils.getInstance().uploadFile(file, file.getName(), remotePath, new UploadProgress() {
                         @Override
                         public void onProgress(String percent) {
-                            jProgressBar.setValue(Integer.valueOf(percent));
+                            int p = Integer.valueOf(percent);
+                            System.out.println("上传进度" + p);
+                            jProgressBar.setValue(p);
                         }
 
                         @Override
                         public void onComplete() {
+                            System.out.println("上传成功");
                             isUpload = false;
                             if(ddRadio.isSelected()){
-                                String content = "最新包" + file.getName() + "已上传";
+                                String content = "最新包" + finalFile.getName() + "已上传";
                                 if(!ddMsg.getText().isEmpty()){
                                     content  = content +  "," + ddMsg.getText();
                                 }
@@ -229,5 +265,33 @@ public class FtpAction extends AnAction {
 
         parent.setContentPane(parentJPanel);
         parent.setVisible(true);
+    }
+
+    /**
+     * 找到文件
+     * @param eve
+     * @param path 第一个去寻找的地址
+     * @param secondPath 第二个去寻找的地址
+     * @return
+     */
+    private File findFile(String path,String secondPath,String thirdPath){
+        File file = null;
+        File pfile = new File(path);
+        if(!pfile.exists() && !secondPath.isEmpty()){
+            pfile = new File(secondPath);
+        }
+        if(!pfile.exists() && !thirdPath.isEmpty()){
+            pfile = new File(thirdPath);
+        }
+        if(pfile.exists()){
+            File[] p = pfile.listFiles();
+            for(File f:p){
+                if(f.getName().endsWith(".apk")){
+                    file = f;
+                    break;
+                }
+            }
+        }
+        return file;
     }
 }

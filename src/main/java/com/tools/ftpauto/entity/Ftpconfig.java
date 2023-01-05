@@ -13,9 +13,10 @@ public class Ftpconfig {
     private String account;
     private String password;
     private String ftpapkbasepath;
-    private String test;
-    private String pre;
-    private String pro;
+    private String dev = "开发";
+    private String test = "测试";
+    private String pre = "准生产";
+    private String pro = "生产";
 
     public void setHost(String host) {
         this.host = host;
@@ -67,4 +68,11 @@ public class Ftpconfig {
         return pro;
     }
 
+    public String getDev() {
+        return dev;
+    }
+
+    public void setDev(String dev) {
+        this.dev = dev;
+    }
 }
