@@ -12,7 +12,7 @@ public class Ftpconfig {
     private String host;
     private String account;
     private String password;
-    private String ftpapkbasepath;
+    private String ftpApkBasePath;
     private String dev = "开发";
     private String test = "测试";
     private String pre = "准生产";
@@ -40,11 +40,12 @@ public class Ftpconfig {
         return password;
     }
 
-    public void setFtpapkbasepath(String ftpapkbasepath) {
-        this.ftpapkbasepath = ftpapkbasepath;
+    public void setFtpApkBasePath(String ftpApkBasePath) {
+        this.ftpApkBasePath = ftpApkBasePath;
     }
-    public String getFtpapkbasepath() {
-        return ftpapkbasepath;
+
+    public String getFtpApkBasePath() {
+        return ftpApkBasePath;
     }
 
     public void setTest(String test) {

@@ -3,6 +3,7 @@ package com.tools.ftpauto;
 import com.google.gson.Gson;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.openapi.ui.messages.MessageDialog;
 import com.tools.ftpauto.entity.*;
@@ -39,6 +40,8 @@ public class FtpAction extends AnAction {
 
     private Gson gson = new Gson();
 
+    private Logger logger = Logger.getInstance(FtpAction.class);
+
     @Override
     public void actionPerformed(AnActionEvent e) {
         String projectPath = e.getProject().getBasePath();
@@ -62,7 +65,7 @@ public class FtpAction extends AnAction {
                 listData = new String[configEntity.getClient().size()];
                 for(int i = 0; i < configEntity.getClient().size();i++){
                     String clientName = configEntity.getClient().get(i).getClientName();
-                    if(clientName.equalsIgnoreCase(e.getProject().getName())){
+                    if(e.getProject().getName().toLowerCase().contains(clientName)){
                         currentSelectClientIndex = i;
                     }
                     listData[i] = configEntity.getClient().get(i).getName();
@@ -90,7 +93,7 @@ public class FtpAction extends AnAction {
         SftpUtils.getInstance().connect();
 
         JFrame parent = new JFrame("ftp自动上传配置");
-        parent.setSize(300,200);
+        parent.setSize(300,220);
         parent.setLocationRelativeTo(null);
         parent.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 
@@ -179,7 +182,7 @@ public class FtpAction extends AnAction {
                     DDJPanel.remove(ddTip);
                     DDJPanel.remove(ddMsg);
                     parentJPanel.updateUI();
-                    parent.setSize(300,200);
+                    parent.setSize(300,220);
                 }
             }
         });
@@ -193,6 +196,10 @@ public class FtpAction extends AnAction {
         jProgressBar.setMinimum(0);
         jProgressBar.setMaximum(100);
         jProgressBar.setStringPainted(true);
+
+        JPanel tip = new JPanel();
+        JLabel tipLab = new JLabel();
+        tip.add(tipLab);
         completeBt.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -207,47 +214,54 @@ public class FtpAction extends AnAction {
                                 eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug","");
                     }
                     if(test.isSelected()){
-                        envirment = configEntity.getFtpConfig().getDev();
+                        envirment = configEntity.getFtpConfig().getTest();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/dat",
                                 eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/dat",
                                 eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug");
                     }
                     if(pre.isSelected()){
-                        envirment = configEntity.getFtpConfig().getDev();
+                        envirment = configEntity.getFtpConfig().getPre();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/pre",
                                 eve.getProject().getBasePath() + File.separator + "app/release","");
                     }
                     if(pro.isSelected()){
-                        envirment = configEntity.getFtpConfig().getDev();
+                        envirment = configEntity.getFtpConfig().getPro();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","");
                     }
                     if(file == null){
+                        tipLab.setText("没有找到apk文件");
                         JOptionPane.showMessageDialog(null, "没有找到apk文件");
                         isUpload = false;
                         return;
                     }
                     String remotePath = "/home/driver/apk/智运-运营端/开发";
-                    remotePath = configEntity.getFtpConfig().getFtpapkbasepath() + File.separator + listData[currentSelectClientIndex] + File.separator + envirment;
+                    remotePath = configEntity.getFtpConfig().getFtpApkBasePath() + "/" + listData[currentSelectClientIndex] + "/" + envirment;
                     File finalFile = file;
-                    System.out.println("找到文件：" + finalFile.getAbsolutePath());
-                    System.out.println("根据配置需要到ftp的目录是：" + remotePath);
+                    tipLab.setText("找到文件：" + finalFile.getAbsolutePath());
+                    tipLab.setText("根据配置需要到ftp的目录是：" + remotePath);
+                    logger.info("找到文件：" + finalFile.getAbsolutePath());
+                    logger.info("根据配置需要到ftp的目录是：" + remotePath);
+                    String finalRemotePath = remotePath;
                     SftpUtils.getInstance().uploadFile(file, file.getName(), remotePath, new UploadProgress() {
                         @Override
                         public void onProgress(String percent) {
                             int p = Integer.valueOf(percent);
-                            System.out.println("上传进度" + p);
+                            logger.info("上传进度" + p);
                             jProgressBar.setValue(p);
                         }
 
                         @Override
                         public void onComplete() {
-                            System.out.println("上传成功");
+                            logger.info("上传成功");
+                            tipLab.setText("上传成功");
                             isUpload = false;
                             if(ddRadio.isSelected()){
                                 String content = "最新包" + finalFile.getName() + "已上传";
+                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
                                 if(!ddMsg.getText().isEmpty()){
-                                    content  = content +  "," + ddMsg.getText();
+                                    content  = content +  "\n" + ddMsg.getText();
                                 }
+                                HttpUtils.getInstance().setLogger(logger);
                                 HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
                             }
                             JOptionPane.showMessageDialog(null, "上传成功");
@@ -261,6 +275,7 @@ public class FtpAction extends AnAction {
         completeJPanel.add(completeBt);
         completeJPanel.add(jProgressBar);
         parentJPanel.add(completeJPanel);
+        parentJPanel.add(tip);
 
 
         parent.setContentPane(parentJPanel);

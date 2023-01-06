@@ -1,5 +1,6 @@
 package com.tools.ftpauto.utils;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.jcraft.jsch.*;
 import com.tools.ftpauto.UploadProgress;
 import com.tools.ftpauto.UploadProgressMonitor;
@@ -25,6 +26,8 @@ public class SftpUtils {
     private String userName = "driver";
     private String password = "driver01@";
 
+    private Logger logger;
+
     public SftpUtils() {
 
         jSch =new JSch();
@@ -38,7 +41,11 @@ public class SftpUtils {
         return sftpUtils;
     }
 
-    public void bind(String host,String userName,String password){
+    public void setLogger(Logger logger) {
+        this.logger = logger;
+    }
+
+    public void bind(String host, String userName, String password){
         this.userName = userName;
         this.host = host;
         this.password = password;
@@ -64,6 +71,10 @@ public class SftpUtils {
             channel.connect();
 
             sftp = (ChannelSftp) channel;
+
+            if(logger != null){
+                logger.info("ftp 连接成功");
+            }
 
             }catch (JSchException e) {
                 e.printStackTrace();
@@ -223,11 +234,13 @@ public class SftpUtils {
                 this.sftp.disconnect();
             }
         }
-
         if (this.sshSession !=null) {
             if (this.sshSession.isConnected()) {
                 this.sshSession.disconnect();
             }
+        }
+        if(logger != null){
+            logger.info("ftp 连接已经关闭");
         }
     }
 }
