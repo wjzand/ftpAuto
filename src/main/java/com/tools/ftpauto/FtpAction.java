@@ -236,7 +236,6 @@ public class FtpAction extends AnAction {
                         envirment = configEntity.getFtpConfig().getPro();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","");
                     }
-                    file = new File("F:\\project\\operation-android\\app\\build\\outputs\\apk\\debug\\operation_test_v1.3.0_0110_1024.apk");
                     if(file == null){
                         fileLab.setText("没有找到apk文件");
                         JOptionPane.showMessageDialog(null, "没有找到apk文件");
@@ -269,15 +268,15 @@ public class FtpAction extends AnAction {
                         public void onComplete() {
                             logger.info("上传成功");
                             isUpload = false;
-//                            if(ddRadio.isSelected()){
-//                                String content = "最新包" + finalFile.getName() + "已上传";
-//                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
-//                                if(!ddMsg.getText().isEmpty()){
-//                                    content  = content +  "\n" + ddMsg.getText();
-//                                }
-//                                HttpUtils.getInstance().setLogger(logger);
-//                                HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
-//                            }
+                            if(ddRadio.isSelected()){
+                                String content = "最新包" + finalFile.getName() + "已上传";
+                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
+                                if(!ddMsg.getText().isEmpty()){
+                                    content  = content +  "\n" + ddMsg.getText();
+                                }
+                                HttpUtils.getInstance().setLogger(logger);
+                                HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
+                            }
                             JOptionPane.showMessageDialog(null, "上传成功");
                         }
                     });
