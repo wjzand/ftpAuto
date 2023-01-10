@@ -86,6 +86,11 @@ public class FtpAction extends AnAction {
 
     boolean isUpload = false;
 
+    private int width = 400;
+    private int height = 270;
+
+    private int lastProgress = -1;
+
     /**
      * ui
      */
@@ -93,7 +98,7 @@ public class FtpAction extends AnAction {
         SftpUtils.getInstance().connect();
 
         JFrame parent = new JFrame("ftp自动上传配置");
-        parent.setSize(300,220);
+        parent.setSize(width,height);
         parent.setLocationRelativeTo(null);
         parent.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 
@@ -175,14 +180,14 @@ public class FtpAction extends AnAction {
                     DDJPanel.add(ddTip);
                     DDJPanel.add(ddMsg);
                     parentJPanel.updateUI();
-                    parent.setSize(300,330);
+                    parent.setSize(width,height + 110);
                 }else {
                     DDJPanel.remove(ddUserTip);
                     DDJPanel.remove(DDUserJPanel);
                     DDJPanel.remove(ddTip);
                     DDJPanel.remove(ddMsg);
                     parentJPanel.updateUI();
-                    parent.setSize(300,220);
+                    parent.setSize(width,height);
                 }
             }
         });
@@ -193,13 +198,16 @@ public class FtpAction extends AnAction {
         JPanel completeJPanel = new JPanel();
         JButton completeBt = new JButton("配置完成");
         JProgressBar jProgressBar = new JProgressBar();
-        jProgressBar.setMinimum(0);
-        jProgressBar.setMaximum(100);
         jProgressBar.setStringPainted(true);
 
         JPanel tip = new JPanel();
-        JLabel tipLab = new JLabel();
-        tip.add(tipLab);
+        tip.setLayout(new VerticalFlowLayout());
+        JLabel fileLab = new JLabel("上传的文件目录");
+        JLabel ftpLab = new JLabel("上传的ftp目录");
+        JLabel progressLab = new JLabel("上传进度");
+        tip.add(fileLab);
+        tip.add(ftpLab);
+        tip.add(progressLab);
         completeBt.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -228,8 +236,9 @@ public class FtpAction extends AnAction {
                         envirment = configEntity.getFtpConfig().getPro();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","");
                     }
+                    file = new File("F:\\project\\operation-android\\app\\build\\outputs\\apk\\debug\\operation_test_v1.3.0_0110_1024.apk");
                     if(file == null){
-                        tipLab.setText("没有找到apk文件");
+                        fileLab.setText("没有找到apk文件");
                         JOptionPane.showMessageDialog(null, "没有找到apk文件");
                         isUpload = false;
                         return;
@@ -237,33 +246,38 @@ public class FtpAction extends AnAction {
                     String remotePath = "/home/driver/apk/智运-运营端/开发";
                     remotePath = configEntity.getFtpConfig().getFtpApkBasePath() + "/" + listData[currentSelectClientIndex] + "/" + envirment;
                     File finalFile = file;
-                    tipLab.setText("找到文件：" + finalFile.getAbsolutePath());
-                    tipLab.setText("根据配置需要到ftp的目录是：" + remotePath);
+                    fileLab.setText("找到文件->" + finalFile.getName());
+                    ftpLab.setText("ftp目录->" + remotePath);
                     logger.info("找到文件：" + finalFile.getAbsolutePath());
                     logger.info("根据配置需要到ftp的目录是：" + remotePath);
                     String finalRemotePath = remotePath;
+                    lastProgress = -1;
                     SftpUtils.getInstance().uploadFile(file, file.getName(), remotePath, new UploadProgress() {
                         @Override
                         public void onProgress(String percent) {
                             int p = Integer.valueOf(percent);
                             logger.info("上传进度" + p);
-                            jProgressBar.setValue(p);
+                            progressLab.setText("上传进度->" + p);
+                            if(lastProgress != p){
+                                lastProgress = p;
+                                jProgressBar.setValue(p);
+                            }
+                            parentJPanel.updateUI();
                         }
 
                         @Override
                         public void onComplete() {
                             logger.info("上传成功");
-                            tipLab.setText("上传成功");
                             isUpload = false;
-                            if(ddRadio.isSelected()){
-                                String content = "最新包" + finalFile.getName() + "已上传";
-                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
-                                if(!ddMsg.getText().isEmpty()){
-                                    content  = content +  "\n" + ddMsg.getText();
-                                }
-                                HttpUtils.getInstance().setLogger(logger);
-                                HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
-                            }
+//                            if(ddRadio.isSelected()){
+//                                String content = "最新包" + finalFile.getName() + "已上传";
+//                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
+//                                if(!ddMsg.getText().isEmpty()){
+//                                    content  = content +  "\n" + ddMsg.getText();
+//                                }
+//                                HttpUtils.getInstance().setLogger(logger);
+//                                HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
+//                            }
                             JOptionPane.showMessageDialog(null, "上传成功");
                         }
                     });
@@ -288,20 +302,20 @@ public class FtpAction extends AnAction {
      * @param secondPath 第二个去寻找的地址
      * @return
      */
-    private File findFile(String path,String secondPath,String thirdPath){
+    private File findFile(String path,String secondPath,String thirdPath) {
         File file = null;
         File pfile = new File(path);
-        if(!pfile.exists() && !secondPath.isEmpty()){
+        if (!pfile.exists() && !secondPath.isEmpty()) {
             pfile = new File(secondPath);
         }
-        if(!pfile.exists() && !thirdPath.isEmpty()){
+        if (!pfile.exists() && !thirdPath.isEmpty()) {
             pfile = new File(thirdPath);
         }
-        if(pfile.exists()){
+        if (pfile.exists()) {
             File[] p = pfile.listFiles();
-            if(p  != null){
-                for(File f:p){
-                    if(f.getName().endsWith(".apk")){
+            if (p != null) {
+                for (File f : p) {
+                    if (f.getName().endsWith(".apk")) {
                         file = f;
                         break;
                     }
