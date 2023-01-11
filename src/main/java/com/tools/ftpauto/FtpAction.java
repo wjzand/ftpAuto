@@ -270,15 +270,15 @@ public class FtpAction extends AnAction {
                         public void onComplete() {
                             logger.info("上传成功");
                             isUpload = false;
-//                            if(ddRadio.isSelected()){
-//                                String content = "最新包" + finalFile.getName() + "已上传";
-//                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
-//                                if(!ddMsg.getText().isEmpty()){
-//                                    content  = content +  "\n" + ddMsg.getText();
-//                                }
-//                                HttpUtils.getInstance().setLogger(logger);
-//                                HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
-//                            }
+                            if(ddRadio.isSelected()){
+                                String content = "最新包" + finalFile.getName() + "已上传";
+                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
+                                if(!ddMsg.getText().isEmpty()){
+                                    content  = content +  "\n" + ddMsg.getText();
+                                }
+                                HttpUtils.getInstance().setLogger(logger);
+                                HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
+                            }
                             JOptionPane.showMessageDialog(null, "上传成功");
                         }
                     });
