@@ -236,7 +236,6 @@ public class FtpAction extends AnAction {
                         envirment = configEntity.getFtpConfig().getPro();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","");
                     }
-                    file = new File("F:\\project\\operation-android\\app\\build\\outputs\\apk\\debug\\operation_debug_v1.3.0_0111_0941.apk");
                     if(file == null){
                         fileLab.setText("没有找到apk文件");
                         JOptionPane.showMessageDialog(null, "没有找到apk文件");
@@ -257,13 +256,13 @@ public class FtpAction extends AnAction {
                         public void onProgress(String percent) {
                             int p = Integer.valueOf(percent);
                             logger.info("上传进度" + p);
-                            EventQueue.invokeLater(() -> {
-                                progressLab.setText("上传进度->" + p);
-                                if(lastProgress != p){
-                                    lastProgress = p;
+                            if(lastProgress != p){
+                                lastProgress = p;
+                                EventQueue.invokeLater(() -> {
+                                    progressLab.setText("上传进度->" + p);
                                     jProgressBar.setValue(p);
-                                }
-                            });
+                                });
+                            }
                         }
 
                         @Override
