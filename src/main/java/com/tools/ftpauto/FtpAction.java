@@ -180,7 +180,7 @@ public class FtpAction extends AnAction {
                     DDJPanel.add(ddTip);
                     DDJPanel.add(ddMsg);
                     parentJPanel.updateUI();
-                    parent.setSize(width,height + 110);
+                    parent.setSize(width,height + 125);
                 }else {
                     DDJPanel.remove(ddUserTip);
                     DDJPanel.remove(DDUserJPanel);
@@ -236,6 +236,7 @@ public class FtpAction extends AnAction {
                         envirment = configEntity.getFtpConfig().getPro();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","");
                     }
+                    file = new File("F:\\project\\operation-android\\app\\build\\outputs\\apk\\debug\\operation_debug_v1.3.0_0111_0941.apk");
                     if(file == null){
                         fileLab.setText("没有找到apk文件");
                         JOptionPane.showMessageDialog(null, "没有找到apk文件");
@@ -256,27 +257,28 @@ public class FtpAction extends AnAction {
                         public void onProgress(String percent) {
                             int p = Integer.valueOf(percent);
                             logger.info("上传进度" + p);
-                            progressLab.setText("上传进度->" + p);
-                            if(lastProgress != p){
-                                lastProgress = p;
-                                jProgressBar.setValue(p);
-                            }
-                            parentJPanel.updateUI();
+                            EventQueue.invokeLater(() -> {
+                                progressLab.setText("上传进度->" + p);
+                                if(lastProgress != p){
+                                    lastProgress = p;
+                                    jProgressBar.setValue(p);
+                                }
+                            });
                         }
 
                         @Override
                         public void onComplete() {
                             logger.info("上传成功");
                             isUpload = false;
-                            if(ddRadio.isSelected()){
-                                String content = "最新包" + finalFile.getName() + "已上传";
-                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
-                                if(!ddMsg.getText().isEmpty()){
-                                    content  = content +  "\n" + ddMsg.getText();
-                                }
-                                HttpUtils.getInstance().setLogger(logger);
-                                HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
-                            }
+//                            if(ddRadio.isSelected()){
+//                                String content = "最新包" + finalFile.getName() + "已上传";
+//                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
+//                                if(!ddMsg.getText().isEmpty()){
+//                                    content  = content +  "\n" + ddMsg.getText();
+//                                }
+//                                HttpUtils.getInstance().setLogger(logger);
+//                                HttpUtils.getInstance().dd(configEntity.getDdConfig().getSocket(),content,ddUsersSelectMap.values());
+//                            }
                             JOptionPane.showMessageDialog(null, "上传成功");
                         }
                     });
