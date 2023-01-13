@@ -20,6 +20,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -213,28 +214,28 @@ public class FtpAction extends AnAction {
             public void actionPerformed(ActionEvent e) {
                 if(!isUpload){
                     isUpload = true;
-//                    File file = new File("F:\\project\\operation-android\\app\\build\\outputs\\apk\\debug\\operation_debug_v1.2.6_1222_1756.apk");
+//                    File fileTest = new File("F:\\project\\operation-android\\app\\build\\outputs\\apk\\debug\\operation_debug_v1.2.6_1222_1756.apk");
                     File file = null;
                     String envirment = "开发";
                     if(dev.isSelected()){
                         envirment = configEntity.getFtpConfig().getDev();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/debug",
-                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug","");
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug","",false);
                     }
                     if(test.isSelected()){
                         envirment = configEntity.getFtpConfig().getTest();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/dat",
                                 eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/dat",
-                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug");
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug",true);
                     }
                     if(pre.isSelected()){
                         envirment = configEntity.getFtpConfig().getPre();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/pre",
-                                eve.getProject().getBasePath() + File.separator + "app/release","");
+                                eve.getProject().getBasePath() + File.separator + "app/release","",false);
                     }
                     if(pro.isSelected()){
                         envirment = configEntity.getFtpConfig().getPro();
-                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","");
+                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","",false);
                     }
                     if(file == null){
                         fileLab.setText("没有找到apk文件");
@@ -302,7 +303,7 @@ public class FtpAction extends AnAction {
      * @param secondPath 第二个去寻找的地址
      * @return
      */
-    private File findFile(String path,String secondPath,String thirdPath) {
+    private File findFile(String path,String secondPath,String thirdPath,boolean isTest) {
         File file = null;
         File pfile = new File(path);
         if (!pfile.exists() && !secondPath.isEmpty()) {
@@ -316,11 +317,31 @@ public class FtpAction extends AnAction {
             if (p != null) {
                 for (File f : p) {
                     if (f.getName().endsWith(".apk")) {
-                        file = f;
+                        //重新命名
+                        if(isTest){
+                            logger.info("文件原名：" + f.getName());
+                            String name = f.getName().replace("debug","test")
+                                    .replace("dat","test");
+                            File newFile = new File(f.getAbsolutePath().replace(f.getName(),name));
+                            logger.info("预计将名字改为：" + newFile.getName());
+                            boolean b = f.renameTo(newFile);
+                            if(b){
+                                file = newFile;
+                                logger.info("修改成功：" + file.getName());
+                            }else {
+                                file = f;
+                                logger.info("修改失败：" + file.getName());
+                            }
+                        }else {
+                            file = f;
+                        }
                         break;
                     }
                 }
             }
+        }
+        if(file != null){
+            logger.info("最终文件名：" + file.getName());
         }
         return file;
     }
