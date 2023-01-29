@@ -158,6 +158,7 @@ public class FtpAction extends AnAction {
         GridLayout layout = new GridLayout(row, col);
         JPanel DDUserJPanel = new JPanel(layout);
         JLabel ddUserTip = new JLabel("请选择需要@的钉钉人员");
+        ddUsersSelectMap.clear();
         ddUsersMap.forEach((s, s2) -> {
             JRadioButton ddRadio1 = new JRadioButton(s);
             DDUserJPanel.add(ddRadio1);
@@ -220,22 +221,22 @@ public class FtpAction extends AnAction {
                     if(dev.isSelected()){
                         envirment = configEntity.getFtpConfig().getDev();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/debug",
-                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug","",false);
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug","",false,false);
                     }
                     if(test.isSelected()){
                         envirment = configEntity.getFtpConfig().getTest();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/dat",
                                 eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/dat",
-                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug",true);
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug",true,false);
                     }
                     if(pre.isSelected()){
                         envirment = configEntity.getFtpConfig().getPre();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/pre",
-                                eve.getProject().getBasePath() + File.separator + "app/release","",false);
+                                eve.getProject().getBasePath() + File.separator + "app/release","",false,true);
                     }
                     if(pro.isSelected()){
                         envirment = configEntity.getFtpConfig().getPro();
-                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","",false);
+                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","",false,false);
                     }
                     if(file == null){
                         fileLab.setText("没有找到apk文件");
@@ -303,7 +304,7 @@ public class FtpAction extends AnAction {
      * @param secondPath 第二个去寻找的地址
      * @return
      */
-    private File findFile(String path,String secondPath,String thirdPath,boolean isTest) {
+    private File findFile(String path,String secondPath,String thirdPath,boolean isTest,boolean isPre) {
         File file = null;
         File pfile = new File(path);
         if (!pfile.exists() && !secondPath.isEmpty()) {
@@ -318,10 +319,16 @@ public class FtpAction extends AnAction {
                 for (File f : p) {
                     if (f.getName().endsWith(".apk")) {
                         //重新命名
-                        if(isTest){
+                        if(isTest || isPre){
                             logger.info("文件原名：" + f.getName());
-                            String name = f.getName().replace("debug","test")
-                                    .replace("dat","test");
+                            String name = f.getName();
+                            if(isTest){
+                                name = f.getName().replace("debug","test")
+                                        .replace("dat","test");
+                            }
+                            if(isPre){
+                                name = f.getName().replace("release","pre");
+                            }
                             File newFile = new File(f.getAbsolutePath().replace(f.getName(),name));
                             logger.info("预计将名字改为：" + newFile.getName());
                             boolean b = f.renameTo(newFile);
