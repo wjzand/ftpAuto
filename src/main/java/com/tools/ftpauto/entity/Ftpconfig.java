@@ -18,6 +18,16 @@ public class Ftpconfig {
     private String pre = "准生产";
     private String pro = "生产";
 
+    private String sit = "sit";
+
+    public String getSit() {
+        return sit;
+    }
+
+    public void setSit(String sit) {
+        this.sit = sit;
+    }
+
     public void setHost(String host) {
         this.host = host;
     }

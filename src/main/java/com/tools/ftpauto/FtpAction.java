@@ -132,6 +132,8 @@ public class FtpAction extends AnAction {
         JRadioButton test = new JRadioButton("测试");
         buttonGroup.add(test);
         test.setSelected(true);
+        JRadioButton sit = new JRadioButton("sit");
+        buttonGroup.add(sit);
         JRadioButton pre = new JRadioButton("预生产");
         buttonGroup.add(pre);
         JRadioButton pro = new JRadioButton("正式");
@@ -139,6 +141,7 @@ public class FtpAction extends AnAction {
         envirmentJPanel.add(envirmentTip);
         envirmentJPanel.add(dev);
         envirmentJPanel.add(test);
+        envirmentJPanel.add(sit);
         envirmentJPanel.add(pre);
         envirmentJPanel.add(pro);
         parentJPanel.add(envirmentJPanel);
@@ -221,22 +224,28 @@ public class FtpAction extends AnAction {
                     if(dev.isSelected()){
                         envirment = configEntity.getFtpConfig().getDev();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/debug",
-                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug","",false,false);
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug","",false,false,false);
                     }
                     if(test.isSelected()){
                         envirment = configEntity.getFtpConfig().getTest();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/dat",
                                 eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/dat",
-                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug",true,false);
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug",true,false,false);
+                    }
+                    if(sit.isSelected()){
+                        envirment = configEntity.getFtpConfig().getSit();
+                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/sit",
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/sit",
+                                eve.getProject().getBasePath() + File.separator + "app/build/outputs/apk/debug",false,true,false);
                     }
                     if(pre.isSelected()){
                         envirment = configEntity.getFtpConfig().getPre();
                         file = findFile(eve.getProject().getBasePath() + File.separator + "app/pre",
-                                eve.getProject().getBasePath() + File.separator + "app/release","",false,true);
+                                eve.getProject().getBasePath() + File.separator + "app/release","",false,false,true);
                     }
                     if(pro.isSelected()){
                         envirment = configEntity.getFtpConfig().getPro();
-                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","",false,false);
+                        file = findFile(eve.getProject().getBasePath() + File.separator + "app/release","","",false,false,false);
                     }
                     if(file == null){
                         fileLab.setText("没有找到apk文件");
@@ -304,7 +313,7 @@ public class FtpAction extends AnAction {
      * @param secondPath 第二个去寻找的地址
      * @return
      */
-    private File findFile(String path,String secondPath,String thirdPath,boolean isTest,boolean isPre) {
+    private File findFile(String path,String secondPath,String thirdPath,boolean isTest,boolean isSit,boolean isPre) {
         File file = null;
         File pfile = new File(path);
         if (!pfile.exists() && !secondPath.isEmpty()) {
@@ -319,12 +328,17 @@ public class FtpAction extends AnAction {
                 for (File f : p) {
                     if (f.getName().endsWith(".apk")) {
                         //重新命名
-                        if(isTest || isPre){
+                        if(isTest || isPre || isSit){
                             logger.info("文件原名：" + f.getName());
                             String name = f.getName();
                             if(isTest){
                                 name = f.getName().replace("debug","test")
                                         .replace("dat","test");
+                            }
+                            if(isSit){
+                                name = f.getName().replace("debug","sit")
+                                        .replace("test","sit")
+                                        .replace("dat","sit");
                             }
                             if(isPre){
                                 name = f.getName().replace("release","pre");
