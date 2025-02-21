@@ -20,6 +20,26 @@ public class Ftpconfig {
 
     private String sit = "sit";
 
+    private String jdUrl = "https://runenc.ijiami.cn:8080/?#/login";
+
+    private String authKey = "";
+
+    public String getAuthKey() {
+        return authKey;
+    }
+
+    public void setAuthKey(String authKey) {
+        this.authKey = authKey;
+    }
+
+    public String getJdUrl() {
+        return jdUrl;
+    }
+
+    public void setJdUrl(String jdUrl) {
+        this.jdUrl = jdUrl;
+    }
+
     public String getSit() {
         return sit;
     }

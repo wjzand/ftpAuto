@@ -7,9 +7,10 @@ import com.tools.ftpauto.UploadProgressMonitor;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.Vector;
+import java.util.function.Consumer;
 
 public class SftpUtils {
     private JSch jSch;
@@ -109,13 +110,15 @@ public class SftpUtils {
             }
 
             createDir(remotePath);
-            sftp.put(fip, remoteFileName,new UploadProgressMonitor(uploadProgress,file.length()));
+            sftp.put(fip, remoteFileName,new UploadProgressMonitor(uploadProgress,fip.available()));
 
             return true;
 
             }catch (SftpException e) {
                 e.printStackTrace();
-            }finally {
+            } catch (IOException e) {
+                e.printStackTrace();
+        } finally {
             if (fip !=null) {
                 try {
                     fip.close();
@@ -241,6 +244,41 @@ public class SftpUtils {
         }
         if(logger != null){
             logger.info("ftp 连接已经关闭");
+        }
+    }
+
+
+    int maxTime = 0;
+    public ChannelSftp.LsEntry findLastedFile(String findPath){
+        if (isConnect()){
+            try {
+                Vector<ChannelSftp.LsEntry> fileList = sftp.ls(findPath);
+                maxTime = 0;
+                if(!fileList.isEmpty()){
+                    final ChannelSftp.LsEntry[] last = {fileList.lastElement()};
+                    fileList.forEach(lsEntry -> {
+                        if(lsEntry.getAttrs().getMTime() > maxTime){
+                            maxTime = lsEntry.getAttrs().getMTime();
+                            last[0] = lsEntry;
+                        }
+                    });
+                    return last[0];
+                }
+            } catch (SftpException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+
+    public void downLoad(String remoteFile,String localDir,SftpProgressMonitor progress){
+        if (isConnect()){
+            try {
+                sftp.get(remoteFile, localDir + "/" + remoteFile, progress);
+            } catch (SftpException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
