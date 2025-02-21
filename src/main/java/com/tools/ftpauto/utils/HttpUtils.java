@@ -164,7 +164,7 @@ public class HttpUtils {
 //                            String linkContent = file.getName() + "#" + resultEntity.getBuildQRCodeURL();
                             String icon = "";
                             if(!resultEntity.getBuildIcon().isEmpty()){
-                                String buildIconPathPre = "d3b7c09b45aaee801b88e7ad65bef0eb".substring(0,5);
+                                String buildIconPathPre = resultEntity.getBuildIcon().substring(0,5);
                                 String buildIconPath = String.join("/",buildIconPathPre.split(""));
                                 icon = "https://cdn-app-icon2.pgyer.com/<buildIconPath>/<buildIcon>?x-oss-process=image/resize,m_lfit,h_120,w_120/format,jpg"
                                         .replace("<buildIconPath>",buildIconPath).replace("<buildIcon>",resultEntity.getBuildIcon());
