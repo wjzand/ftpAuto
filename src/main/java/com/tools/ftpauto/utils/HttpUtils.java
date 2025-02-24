@@ -64,23 +64,26 @@ public class HttpUtils {
         if(webSocket == null || webSocket.isEmpty()){
             webSocket = "https://oapi.dingtalk.com/robot/send?access_token=4c51ac08b33acba6a1e413e2f881bf4e05712a0a460de3f2ab20b7dd86b2737e";
         }
+//        webSocket = "https://oapi.dingtalk.com/robot/send?access_token=aae10b0add24e43c893218275489ad65792bcc54ae2fa63f45323f2352cb5548";
         JSONObject jsonObject = new JSONObject();
 
-        if(type == 1){
-            String[] contentArray = content.split("#");
-            JSONObject linkJson = new JSONObject();
-            linkJson.put("text","密码：shide,点击去安装(跟ftp包是一样的)");
-            linkJson.put("title",contentArray[0] + "已上传");
-            linkJson.put("messageUrl",contentArray[2]);
-            linkJson.put("picUrl",contentArray[1]);
-            jsonObject.put("msgtype","link");
-            jsonObject.put("link",linkJson);
-        }else {
-            JSONObject contentJson = new JSONObject();
-            contentJson.put("content",content);
-            jsonObject.put("text",contentJson);
-            jsonObject.put("msgtype","text");
-        }
+//        if(type == 1){
+//            String[] contentArray = content.split("#");
+//            JSONObject linkJson = new JSONObject();
+//            linkJson.put("text","密码：shide,点击去安装(跟ftp包是一样的)");
+//            linkJson.put("title",contentArray[0] + "已上传");
+//            linkJson.put("messageUrl",contentArray[2]);
+//            linkJson.put("picUrl",contentArray[1]);
+//            jsonObject.put("msgtype","link");
+//            jsonObject.put("link",linkJson);
+//        }else {
+//            JSONObject contentJson = new JSONObject();
+//            contentJson.put("content",content);
+//            jsonObject.put("text",contentJson);
+//            jsonObject.put("msgtype","text");
+//        }
+
+        final String[] finalContent = {content};
 
         JSONObject at = new JSONObject();
         JSONArray phone = new JSONArray();
@@ -88,11 +91,18 @@ public class HttpUtils {
             @Override
             public void accept(String s) {
                 phone.add(s);
+                finalContent[0] = finalContent[0] + "@" + s;
             }
         });
         at.put("atMobiles",phone);
         at.put("isAtAll",false);
         jsonObject.put("at",at);
+
+        JSONObject markdownJson = new JSONObject();
+        markdownJson.put("title","APP有更新");
+        markdownJson.put("text",finalContent[0]);
+        jsonObject.put("msgtype","markdown");
+        jsonObject.put("markdown",markdownJson);
 
         String body = jsonObject.toString();
         System.out.println(body);
@@ -166,11 +176,12 @@ public class HttpUtils {
                             if(!resultEntity.getBuildIcon().isEmpty()){
                                 String buildIconPathPre = resultEntity.getBuildIcon().substring(0,5);
                                 String buildIconPath = String.join("/",buildIconPathPre.split(""));
-                                icon = "https://cdn-app-icon2.pgyer.com/<buildIconPath>/<buildIcon>?x-oss-process=image/resize,m_lfit,h_120,w_120/format,jpg"
+                                icon = "https://cdn-app-icon2.pgyer.com/<buildIconPath>/<buildIcon>?x-oss-process=image/resize,m_lfit,h_60,w_60/format,jpg"
                                         .replace("<buildIconPath>",buildIconPath).replace("<buildIcon>",resultEntity.getBuildIcon());
                                 log("icon链接 =" + icon);
                             }
-                            String linkContent = file.getName() + "#" + icon + "#" + "https://www.pgyer.com/" + resultEntity.getBuildShortcutUrl();
+//                            String linkContent = file.getName() + "#" + icon + "#" + "https://www.pgyer.com/" + resultEntity.getBuildShortcutUrl();
+                            String linkContent = content.replace("appIconUrl",icon).replace("appLinkUrl","https://www.pgyer.com/" + resultEntity.getBuildShortcutUrl());
                             log(linkContent);
                             dd(1,webSocket,linkContent,phones);
                         }

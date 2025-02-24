@@ -372,11 +372,18 @@ public class FtpAction extends AnAction {
                             logger.info("上传成功");
                             isUpload = false;
                             if(ddRadio.isSelected()){
-                                String content = "最新包" + finalFile.getName() + "已上传到ftp";
-                                content = content + "\n" + "文件所在ftp的目录：" + finalRemotePath;
-                                content = content + "\n" + "（插件升级，如需二维码下载安装，请联系开发人员）";
+                                String content = "##### 最新包" + finalFile.getName() + "已上传到ftp";
+                                content = content + "\n" + "远程目录：" + finalRemotePath;
+                                if(pgyRadio.isSelected()) {
+                                    content = content + "\n\n" + "插件已升级，没有ftp可点击下面直达链接";
+                                    content = content + "\n\n" + "安装密码：shide,跟ftp上的包是一样的";
+                                    content = content + " \n " + "![应用图片](appIconUrl)";
+                                    content = content + " \n " + "[直达链接->KFC](appLinkUrl)";
+                                }else {
+                                    content = content + "\n\n" + "插件已升级，如需网页下载安装可联系开发人员";
+                                }
                                 if(!ddMsg.getText().isEmpty()){
-                                    content  = content +  "\n" + ddMsg.getText();
+                                    content  = content +  " \n ##### " + ddMsg.getText();
                                 }
                                 HttpUtils.getInstance().setLogger(logger);
                                 if(pgyRadio.isSelected()){
