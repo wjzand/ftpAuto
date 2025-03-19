@@ -144,6 +144,7 @@ public class HttpUtils {
         builder.addTextBody("_api_key", "5b6b98021d8f82d7c87bc7d758a130f1");
         builder.addTextBody("buildInstallType", "2");
         builder.addTextBody("buildPassword", "shide");
+        builder.addTextBody("buildUpdateDescription",file.getName());
         builder.addBinaryBody("file", file);
 
         HttpEntity httpEntity = builder.build();
